@@ -15,6 +15,10 @@ public class Operation {
         this.end = end;
     }
 
+    public void setAssignedAircrafts(HashSet<Integer> assignedAircrafts) {
+        this.assignedAircrafts = assignedAircrafts;
+    }
+
     public LocalDateTime getStart() {
         return this.start;
     }

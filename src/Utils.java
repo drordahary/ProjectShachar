@@ -4,6 +4,9 @@ import org.json.JSONObject;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 
 public class Utils {
@@ -49,5 +52,15 @@ public class Utils {
             }
         }
         return -1;
+    }
+
+    public static boolean isValidDateString(String dateString, String formatPattern) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern);
+            LocalDateTime.parse(dateString, formatter);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 }

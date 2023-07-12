@@ -1,9 +1,188 @@
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static MainSystem mainSystem = new MainSystem();
+    public static String DATE_FORMAT = "yyyy-MM-dd HH:mm";
 
+    public static void main(String[] args) {
+        showMenu();
+        while (handleMenuChooser()) {
+            System.out.println();
+            showMenu();
+        }
+    }
+
+    public static void showMenu() {
+        System.out.println("Choose one of the following:");
+        System.out.println("1. Add aircraft");
+        System.out.println("2. Add operation");
+        System.out.println("3. Get all operations within a time span");
+        System.out.println("4. Check if an operation is ready");
+        System.out.println("5. Exit");
+    }
+
+    public static boolean handleMenuChooser() {
+        Scanner sc = new Scanner(System.in);
+        String choice = sc.nextLine();
+        if (choice.equals("1")) {
+            handleAddAircraft();
+            return true;
+        } else if (choice.equals("2")) {
+            handleAddOperation();
+            return true;
+        } else if (choice.equals("3")) {
+            handleGetOperationsTimeSpan();
+            return true;
+        } else if (choice.equals("4")) {
+            handleCheckOperationReady();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static void handleAddAircraft() {
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();
+        try {
+            int id = Integer.parseInt(input);
+            if (!mainSystem.addAircraft(id)) {
+                System.out.println("Aircraft ID already exists");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Not a number");
+        }
+    }
+
+    public static void handleAddOperation() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter operation name: ");
+        String operationName = sc.nextLine();
+
+        System.out.print("Enter task description: ");
+        String taskDescription = sc.nextLine();
+
+        System.out.print("Enter number of required aircrafts: ");
+        String input = sc.nextLine();
+        int count;
+        try {
+            count = Integer.parseInt(input);
+            if (count <= 0) {
+                System.out.println("Invalid number of required aircrafts");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Not a number");
+            return;
+        }
+
+        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
+        String startString = sc.nextLine();
+        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+        }
+        System.out.print("Enter ending date: ");
+        String endString = sc.nextLine();
+        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        LocalDateTime start = LocalDateTime.parse(startString, formatter);
+        LocalDateTime end = LocalDateTime.parse(endString, formatter);
+
+        System.out.print("Enter operation type (1 - Intelligence gathering, 2 - Attack): ");
+        int type;
+        try {
+            type = Integer.parseInt(input);
+            if (type != 1 && type != 2) {
+                System.out.println("Invalid input");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input");
+            return;
+        }
+
+        if (type == 1) {
+            System.out.print("Enter camera type: ");
+            String cameraType = sc.nextLine();
+            System.out.print("Enter flight route: ");
+            String flightRoute = sc.nextLine();
+
+            TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
+            Operation op = new IntelligenceGatheringOperation(taskInfo, cameraType, flightRoute,
+                    start, end);
+            mainSystem.addOperation(op);
+        } else {
+            System.out.print("Enter armament type: ");
+            String armamentType = sc.nextLine();
+
+            System.out.println("Enter attack location:");
+            System.out.print("Enter x: ");
+            double x;
+            try {
+                x = Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+                return;
+            }
+
+            System.out.print("Enter y: ");
+            double y;
+            try {
+                y = Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+                return;
+            }
+
+            Point attackLocation = new Point(x, y);
+            TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
+            Operation op = new AttackOperation(taskInfo, armamentType, attackLocation, start, end);
+            mainSystem.addOperation(op);
+        }
+    }
+
+    public static void handleGetOperationsTimeSpan() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
+        String startString = sc.nextLine();
+        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+        }
+        System.out.print("Enter ending date: ");
+        String endString = sc.nextLine();
+        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        LocalDateTime start = LocalDateTime.parse(startString, formatter);
+        LocalDateTime end = LocalDateTime.parse(endString, formatter);
+
+        System.out.println("Operations:");
+        List<Operation> operations = mainSystem.getAllOperationsWithinTime(start, end);
+        for (Operation op : operations) {
+            System.out.println(op.getTaskInformation().getOperationName());
+        }
+    }
+
+    public static void handleCheckOperationReady() {
+        Scanner sc = new Scanner(System.in);
+        String operationName = sc.nextLine();
+        Operation op = mainSystem.getOperationByName(operationName);
+        if (op == null) {
+            System.out.println("Operation does not exists");
+        } else {
+            if (mainSystem.isOperationReady(op)) {
+                System.out.println("Operation is ready");
+            } else {
+                System.out.println("Operation is not ready");
+            }
+        }
     }
 }

@@ -91,6 +91,19 @@ public class MainSystem {
         this.aircrafts.add(id);
         this.jsonAircraft.put(id);
         Utils.writeJsonToFile("data\\aircraft.json", this.aircrafts.toString());
+        tryAddAircraftToOperations(id);
+        return true;
+    }
+
+    public boolean addOperation(Operation operation) {
+        // Checking if the operation already exists (Check by operation name)
+        for (Operation op : this.operations) {
+            if (op.getTaskInformation().getOperationName()
+                    .equals(operation.getTaskInformation().getOperationName())) {
+                return false;
+            }
+        }
+        assignAllPossibleAircrafts(operation);
         return true;
     }
 
@@ -113,6 +126,15 @@ public class MainSystem {
         }
         this.jsonOperations.put(Utils.operationToJson(operation));
         Utils.writeJsonToFile("data\\operation.json", this.jsonOperations.toString());
+    }
+
+    public Operation getOperationByName(String operationName) {
+        for (Operation op : this.operations) {
+            if (op.getTaskInformation().getOperationName().equals(operationName)) {
+                return op;
+            }
+        }
+        return null;
     }
 
     public List<Operation> getAllOperationsWithinTime(LocalDateTime start, LocalDateTime end) {
@@ -138,9 +160,26 @@ public class MainSystem {
         // It's possible that because the time changes, it will open up
         // other operations for all aircraft
         for (Integer aircraftId : this.aircrafts) {
-            for (Operation operation : this.operations) {
-                assignAircraftToOperation(aircraftId, operation);
-            }
+            tryAddAircraftToOperations(aircraftId);
         }
+    }
+
+    public void tryAddAircraftToOperations(int id) {
+        for (Operation operation : this.operations) {
+            assignAircraftToOperation(id, operation);
+        }
+    }
+
+    public void assignAllPossibleAircrafts(Operation operation) {
+        for (Integer aircraftId : this.aircrafts) {
+            for (Operation op : this.operations) {
+                if (op.isAircraftAssigned(aircraftId) && !operation.canAssignWithTime(op)) {
+                    break;
+                }
+            }
+            operation.assignAircraft(aircraftId);
+        }
+        this.jsonOperations.put(Utils.operationToJson(operation));
+        Utils.writeJsonToFile("data\\operation.json", this.jsonOperations.toString());
     }
 }

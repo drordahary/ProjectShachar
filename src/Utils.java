@@ -14,6 +14,7 @@ public class Utils {
         try {
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filename));
             bufferedWriter.write(jsonData);
+            bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -25,8 +26,12 @@ public class Utils {
         jsonObject.put("operationName", taskInformation.getOperationName());
         jsonObject.put("taskDescription", taskInformation.getTaskDescription());
         jsonObject.put("numOfAircrafts", taskInformation.getNumOfAircrafts());
-        jsonObject.put("start", op.getStart().toString());
-        jsonObject.put("end", op.getEnd().toString());
+        String startStr = op.getStart().toString();
+        startStr = startStr.replace('T', ' ');
+        jsonObject.put("start", startStr);
+        String endStr = op.getEnd().toString();
+        endStr = endStr.replace('T', ' ');
+        jsonObject.put("end", endStr);
 
         HashSet<Integer> assignedAircrafts = op.getAssignedAircrafts();
         JSONArray assignedAircraftsJson = new JSONArray();
@@ -34,13 +39,15 @@ public class Utils {
             assignedAircraftsJson.put(id);
         }
 
+        jsonObject.put("assignedAircrafts", assignedAircraftsJson);
+
         if (op instanceof IntelligenceGatheringOperation) {
             jsonObject.put("cameraType", ((IntelligenceGatheringOperation) op).getCameraType());
-            jsonObject.put("flightRoute", ((IntelligenceGatheringOperation) op).getCameraType());
+            jsonObject.put("flightRoute", ((IntelligenceGatheringOperation) op).getFlightRoute());
         } else {
             jsonObject.put("armamentType", ((AttackOperation) op).getArmamentType());
             jsonObject.put("x", ((AttackOperation) op).getAttackLocation().getX());
-            jsonObject.put("x", ((AttackOperation) op).getAttackLocation().getY());
+            jsonObject.put("y", ((AttackOperation) op).getAttackLocation().getY());
         }
         return jsonObject;
     }

@@ -1,10 +1,8 @@
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashSet;
 
 public class AttackOperation extends Operation {
-    private String armamentType;
-    private Point attackLocation; // (x, y) location
+    private final String armamentType;
+    private final Point attackLocation; // (x, y) location
 
     public AttackOperation(TaskInformation taskInformation, String armamentType,
                            Point attackLocation, LocalDateTime start, LocalDateTime end) {

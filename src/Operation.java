@@ -1,9 +1,8 @@
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashSet;
 
 public class Operation {
-    private TaskInformation taskInformation;
+    private final TaskInformation taskInformation;
     private HashSet<Integer> assignedAircrafts;
     private LocalDateTime start;
     private LocalDateTime end;

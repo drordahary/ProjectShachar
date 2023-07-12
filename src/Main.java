@@ -21,31 +21,47 @@ public class Main {
         System.out.println("2. Add operation");
         System.out.println("3. Get all operations within a time span");
         System.out.println("4. Check if an operation is ready");
-        System.out.println("5. Exit");
+        System.out.println("5. Change operation time");
+        System.out.println("6. Exit");
     }
 
     public static boolean handleMenuChooser() {
         Scanner sc = new Scanner(System.in);
         String choice = sc.nextLine();
-        if (choice.equals("1")) {
-            handleAddAircraft();
-            return true;
-        } else if (choice.equals("2")) {
-            handleAddOperation();
-            return true;
-        } else if (choice.equals("3")) {
-            handleGetOperationsTimeSpan();
-            return true;
-        } else if (choice.equals("4")) {
-            handleCheckOperationReady();
-            return true;
-        } else {
-            return false;
+        switch (choice) {
+            case "1" -> {
+                handleAddAircraft();
+                return true;
+            }
+            case "2" -> {
+                handleAddOperation();
+                return true;
+            }
+            case "3" -> {
+                handleGetOperationsTimeSpan();
+                return true;
+            }
+            case "4" -> {
+                handleCheckOperationReady();
+                return true;
+            }
+            case "5" -> {
+                handleChangeOperationTime();
+                return true;
+            }
+            case "6" -> {
+                return false;
+            }
+            default -> {
+                System.out.println("Invalid input");
+                return true;
+            }
         }
     }
 
     public static void handleAddAircraft() {
         Scanner sc = new Scanner(System.in);
+        System.out.print("Enter aircraft ID: ");
         String input = sc.nextLine();
         try {
             int id = Integer.parseInt(input);
@@ -83,11 +99,13 @@ public class Main {
         String startString = sc.nextLine();
         if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
             System.out.println("Invalid date");
+            return;
         }
         System.out.print("Enter ending date: ");
         String endString = sc.nextLine();
         if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
             System.out.println("Invalid date");
+            return;
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
@@ -95,6 +113,7 @@ public class Main {
         LocalDateTime end = LocalDateTime.parse(endString, formatter);
 
         System.out.print("Enter operation type (1 - Intelligence gathering, 2 - Attack): ");
+        input = sc.nextLine();
         int type;
         try {
             type = Integer.parseInt(input);
@@ -116,13 +135,16 @@ public class Main {
             TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
             Operation op = new IntelligenceGatheringOperation(taskInfo, cameraType, flightRoute,
                     start, end);
-            mainSystem.addOperation(op);
+            if (!mainSystem.addOperation(op)) {
+                System.out.println("Cannot create operation");
+            }
         } else {
             System.out.print("Enter armament type: ");
             String armamentType = sc.nextLine();
 
             System.out.println("Enter attack location:");
             System.out.print("Enter x: ");
+            input = sc.nextLine();
             double x;
             try {
                 x = Double.parseDouble(input);
@@ -132,6 +154,7 @@ public class Main {
             }
 
             System.out.print("Enter y: ");
+            input = sc.nextLine();
             double y;
             try {
                 y = Double.parseDouble(input);
@@ -143,7 +166,9 @@ public class Main {
             Point attackLocation = new Point(x, y);
             TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
             Operation op = new AttackOperation(taskInfo, armamentType, attackLocation, start, end);
-            mainSystem.addOperation(op);
+            if (!mainSystem.addOperation(op)) {
+                System.out.println("Cannot create operation");
+            }
         }
     }
 
@@ -153,11 +178,13 @@ public class Main {
         String startString = sc.nextLine();
         if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
             System.out.println("Invalid date");
+            return;
         }
         System.out.print("Enter ending date: ");
         String endString = sc.nextLine();
         if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
             System.out.println("Invalid date");
+            return;
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
@@ -184,5 +211,35 @@ public class Main {
                 System.out.println("Operation is not ready");
             }
         }
+    }
+
+    public static void handleChangeOperationTime() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter operation name: ");
+        String operationName = sc.nextLine();
+        Operation op = mainSystem.getOperationByName(operationName);
+        if (op == null) {
+            System.out.println("Operation does not exists");
+            return;
+        }
+
+        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
+        String startString = sc.nextLine();
+        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+            return;
+        }
+        System.out.print("Enter ending date: ");
+        String endString = sc.nextLine();
+        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
+            System.out.println("Invalid date");
+            return;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        LocalDateTime start = LocalDateTime.parse(startString, formatter);
+        LocalDateTime end = LocalDateTime.parse(endString, formatter);
+
+        mainSystem.changeOperationTime(op, start, end);
     }
 }

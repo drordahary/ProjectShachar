@@ -3,7 +3,6 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.InputStream;
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,8 +10,9 @@ import java.util.HashSet;
 import java.util.List;
 
 public class MainSystem {
-    private HashSet<Integer> aircrafts;
-    private List<Operation> operations;
+    private static final String ABS_PATH = "C:\\Users\\ron de mon\\IdeaProjects\\Project\\";
+    private final HashSet<Integer> aircrafts;
+    private final List<Operation> operations;
     private JSONArray jsonAircraft;
     private JSONArray jsonOperations;
 
@@ -90,7 +90,7 @@ public class MainSystem {
         }
         this.aircrafts.add(id);
         this.jsonAircraft.put(id);
-        Utils.writeJsonToFile("data\\aircraft.json", this.aircrafts.toString());
+        Utils.writeJsonToFile(ABS_PATH + "src\\data\\aircraft.json", this.aircrafts.toString());
         tryAddAircraftToOperations(id);
         return true;
     }
@@ -103,6 +103,7 @@ public class MainSystem {
                 return false;
             }
         }
+        this.operations.add(operation);
         assignAllPossibleAircrafts(operation);
         return true;
     }
@@ -125,7 +126,7 @@ public class MainSystem {
             this.jsonOperations.remove(idx);
         }
         this.jsonOperations.put(Utils.operationToJson(operation));
-        Utils.writeJsonToFile("data\\operation.json", this.jsonOperations.toString());
+        Utils.writeJsonToFile(ABS_PATH + "src\\data\\operation.json", this.jsonOperations.toString());
     }
 
     public Operation getOperationByName(String operationName) {
@@ -180,6 +181,6 @@ public class MainSystem {
             operation.assignAircraft(aircraftId);
         }
         this.jsonOperations.put(Utils.operationToJson(operation));
-        Utils.writeJsonToFile("data\\operation.json", this.jsonOperations.toString());
+        Utils.writeJsonToFile(ABS_PATH + "src\\data\\operation.json", this.jsonOperations.toString());
     }
 }

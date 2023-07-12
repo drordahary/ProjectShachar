@@ -1,0 +1,1 @@
+[{"assignedAircrafts":[1,2,3],"taskDescription":"some","start":"2023-08-12 15:00","operationName":"oper","end":"2023-08-14 15:00","numOfAircrafts":3,"cameraType":"good","flightRoute":"ok"},{"armamentType":"arma","assignedAircrafts":[1,2,3,4],"taskDescription":"desc","start":"2023-09-16 18:00","x":90.8,"y":20.2,"operationName":"oper2","end":"2023-09-16 22:00","numOfAircrafts":4}]

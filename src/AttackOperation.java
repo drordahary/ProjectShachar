@@ -12,4 +12,12 @@ public class AttackOperation extends Operation {
         this.armamentType = armamentType;
         this.attackLocation = attackLocation;
     }
+
+    public String getArmamentType() {
+        return this.armamentType;
+    }
+
+    public Point getAttackLocation() {
+        return this.attackLocation;
+    }
 }

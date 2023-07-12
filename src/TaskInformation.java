@@ -12,4 +12,12 @@ public class TaskInformation {
     public int getNumOfAircrafts() {
         return this.numOfAircrafts;
     }
+
+    public String getOperationName() {
+        return this.operationName;
+    }
+
+    public String getTaskDescription() {
+        return this.taskDescription;
+    }
 }

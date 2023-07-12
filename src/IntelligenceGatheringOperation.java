@@ -12,4 +12,12 @@ public class IntelligenceGatheringOperation extends Operation {
         this.cameraType = cameraType;
         this.flightRoute = flightRoute;
     }
+
+    public String getCameraType() {
+        return this.cameraType;
+    }
+
+    public String getFlightRoute() {
+        return this.flightRoute;
+    }
 }

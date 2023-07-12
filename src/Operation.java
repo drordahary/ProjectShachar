@@ -19,12 +19,20 @@ public class Operation {
         this.assignedAircrafts = assignedAircrafts;
     }
 
+    public HashSet<Integer> getAssignedAircrafts() {
+        return this.assignedAircrafts;
+    }
+
     public LocalDateTime getStart() {
         return this.start;
     }
 
     public LocalDateTime getEnd() {
         return this.end;
+    }
+
+    public TaskInformation getTaskInformation() {
+        return this.taskInformation;
     }
 
     public void setStart(LocalDateTime start) {

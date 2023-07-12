@@ -89,6 +89,8 @@ public class MainSystem {
             return false;
         }
         this.aircrafts.add(id);
+        this.jsonAircraft.put(id);
+        Utils.writeJsonToFile("data\\aircraft.json", this.aircrafts.toString());
         return true;
     }
 
@@ -104,6 +106,13 @@ public class MainSystem {
             }
         }
         operation.assignAircraft(id);
+        int idx = Utils.getIndexByOperationName(this.jsonOperations,
+                operation.getTaskInformation().getOperationName());
+        if (idx != -1) {
+            this.jsonOperations.remove(idx);
+        }
+        this.jsonOperations.put(Utils.operationToJson(operation));
+        Utils.writeJsonToFile("data\\operation.json", this.jsonOperations.toString());
     }
 
     public List<Operation> getAllOperationsWithinTime(LocalDateTime start, LocalDateTime end) {

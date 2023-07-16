@@ -10,7 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class MainSystem {
-    private static final String ABS_PATH = "C:\\Users\\ron de mon\\IdeaProjects\\Project\\";
+    private static final String ABS_PATH = MainSystem.class
+                    .getProtectionDomain().getCodeSource().getLocation().getPath() + "\\";
     private final HashSet<Integer> aircrafts;
     private final List<Operation> operations;
     private JSONArray jsonAircraft;

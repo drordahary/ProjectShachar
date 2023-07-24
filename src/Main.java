@@ -146,7 +146,6 @@ public class Main {
     }
 
     public static void handleAddOperation() {
-        Scanner sc = new Scanner(System.in);
         TaskInformation TI = getTaskInformation();
         if (TI == null) {
             return;

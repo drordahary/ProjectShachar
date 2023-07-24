@@ -10,15 +10,17 @@ import java.util.HashSet;
 import java.util.List;
 
 public class MainSystem {
-    private static final String ABS_PATH = "";
     private final HashSet<Integer> aircrafts;
     private final List<Operation> operations;
+    private final List<DrawerOperation> drawerOperations;
     private JSONArray jsonAircraft;
     private JSONArray jsonOperations;
+    private JSONArray jsonDrawerOperations;
 
     public MainSystem() {
         this.aircrafts = new HashSet<>();
         this.operations = new ArrayList<>();
+        this.drawerOperations = new ArrayList<>();
         setDataFromJson();
     }
 
@@ -34,6 +36,27 @@ public class MainSystem {
         this.jsonAircraft = new JSONArray(tokener);
         for (int i = 0; i < this.jsonAircraft.length(); i++) {
             this.aircrafts.add(this.jsonAircraft.getInt(i));
+        }
+
+        // Drawer operations
+        resourceName = "data\\drawerOperation.json";
+        is = MainSystem.class.getResourceAsStream(resourceName);
+        if (is == null) {
+            throw new NullPointerException("Cannot find resource file " + resourceName);
+        }
+
+        tokener = new JSONTokener(is);
+        this.jsonDrawerOperations = new JSONArray(tokener);
+        for (int i = 0; i < this.jsonDrawerOperations.length(); i++) {
+            JSONObject currentObject = this.jsonOperations.getJSONObject(i);
+
+            String operationName = currentObject.getString("operationName");
+            String taskDescription = currentObject.getString("taskDescription");
+            int numOfAircrafts = currentObject.getInt("numOfAircrafts");
+
+            TaskInformation taskInformation = new TaskInformation(operationName,
+                    taskDescription, numOfAircrafts);
+            this.drawerOperations.add(new DrawerOperation(taskInformation));
         }
 
         // Operations
@@ -90,18 +113,15 @@ public class MainSystem {
         }
         this.aircrafts.add(id);
         this.jsonAircraft.put(id);
-        Utils.writeJsonToFile(ABS_PATH + "src\\data\\aircraft.json", this.aircrafts.toString());
+        Utils.writeJsonToFile("src\\data\\aircraft.json", this.aircrafts.toString());
         tryAddAircraftToOperations(id);
         return true;
     }
 
     public boolean addOperation(Operation operation) {
         // Checking if the operation already exists (Check by operation name)
-        for (Operation op : this.operations) {
-            if (op.getTaskInformation().getOperationName()
-                    .equals(operation.getTaskInformation().getOperationName())) {
-                return false;
-            }
+        if (operationNameExists(operation.getTaskInformation().getOperationName())) {
+            return false;
         }
         this.operations.add(operation);
         assignAllPossibleAircrafts(operation);
@@ -110,7 +130,7 @@ public class MainSystem {
 
     public void assignAircraftToOperation(int id, Operation operation) {
         if (!this.operations.contains(operation) || operation.isAircraftAssigned(id)
-        || operation.isOperationReady()) {
+        || operation.isOperationReady() || operation.reachedCapacity()) {
             return;
         }
 
@@ -126,7 +146,7 @@ public class MainSystem {
             this.jsonOperations.remove(idx);
         }
         this.jsonOperations.put(Utils.operationToJson(operation));
-        Utils.writeJsonToFile(ABS_PATH + "src\\data\\operation.json", this.jsonOperations.toString());
+        Utils.writeJsonToFile("src\\data\\operation.json", this.jsonOperations.toString());
     }
 
     public Operation getOperationByName(String operationName) {
@@ -138,11 +158,29 @@ public class MainSystem {
         return null;
     }
 
+    public boolean operationNameExists(String operationName) {
+        for (Operation op : this.operations) {
+            if (op.getTaskInformation().getOperationName()
+                    .equals(operationName)) {
+                return true;
+            }
+        }
+        for (DrawerOperation op : this.drawerOperations) {
+            if (op.getTaskInformation().getOperationName()
+                    .equals(operationName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<Operation> getAllOperationsWithinTime(LocalDateTime start, LocalDateTime end) {
         List<Operation> allOperations = new ArrayList<>();
         for (Operation op : this.operations) {
-            if (op.getStart().isAfter(start) || op.getEnd().isBefore(end)
-            || (op.getStart().isBefore(start) && op.getEnd().isAfter(end))) {
+            if (((op.getStart().isAfter(start) || op.getStart().equals(start))
+                    && (op.getEnd().isBefore(end) || op.getEnd().equals(end)))
+            || ((op.getStart().isBefore(start) || op.getStart().equals(start))
+                    && (op.getEnd().isAfter(end) || op.getEnd().equals(end)))) {
                 allOperations.add(op);
             }
         }
@@ -172,15 +210,92 @@ public class MainSystem {
     }
 
     public void assignAllPossibleAircrafts(Operation operation) {
+        int assign = 1;
         for (Integer aircraftId : this.aircrafts) {
             for (Operation op : this.operations) {
+                if (operation.getTaskInformation().getOperationName()
+                        .equals(op.getTaskInformation().getOperationName())) {
+                    continue;
+                }
+
                 if (op.isAircraftAssigned(aircraftId) && !operation.canAssignWithTime(op)) {
+                    assign = 0;
                     break;
                 }
             }
-            operation.assignAircraft(aircraftId);
+            if (assign == 1) {
+                operation.assignAircraft(aircraftId);
+            }
+            assign = 1;
         }
         this.jsonOperations.put(Utils.operationToJson(operation));
-        Utils.writeJsonToFile(ABS_PATH + "src\\data\\operation.json", this.jsonOperations.toString());
+        Utils.writeJsonToFile("src\\data\\operation.json", this.jsonOperations.toString());
+    }
+
+    public void getAllUnpreparedOperations(int xHours) {
+        for (Operation op : this.operations) {
+            if (op.isOperationInXTime(xHours) && !op.isOperationReady()) {
+                System.out.println(op.getTaskInformation().getOperationName());
+            }
+        }
+    }
+
+    public boolean addDrawerOperation(String operationName, String taskDescription, int numOfAircrafts) {
+        if (operationNameExists(operationName)) {
+            return false;
+        }
+        TaskInformation taskInformation = new TaskInformation(operationName, taskDescription, numOfAircrafts);
+        DrawerOperation drawerOperation = new DrawerOperation(taskInformation);
+        this.drawerOperations.add(drawerOperation);
+        this.jsonDrawerOperations.put(Utils.drawerOperationToJson(drawerOperation));
+        Utils.writeJsonToFile("src\\data\\drawerOperation.json", this.jsonDrawerOperations.toString());
+        return true;
+    }
+
+    public boolean createAttackOperation(String opName, LocalDateTime start, LocalDateTime end,
+                                      String armamentType, Point attackLocation) {
+        AttackOperation attackOperation = null;
+        for (DrawerOperation op : this.drawerOperations) {
+            if (op.getTaskInformation().getOperationName().equals(opName)) {
+                attackOperation = op.createAttackOperation(start, end, armamentType, attackLocation);
+                this.drawerOperations.remove(op);
+                this.jsonDrawerOperations
+                        .remove(Utils.getIndexByOperationName(this.jsonDrawerOperations, opName));
+                Utils.writeJsonToFile("src\\data\\drawerOperation.json",
+                        this.jsonDrawerOperations.toString());
+                break;
+            }
+        }
+        if (attackOperation == null) {
+            return false;
+        }
+
+        return addOperation(attackOperation);
+    }
+
+    public boolean createIntelligenceGatheringOperation(String opName, LocalDateTime start, LocalDateTime end,
+                                         String cameraType, String flightRoute) {
+        IntelligenceGatheringOperation intelligenceGatheringOperation = null;
+        for (DrawerOperation op : this.drawerOperations) {
+            if (op.getTaskInformation().getOperationName().equals(opName)) {
+                intelligenceGatheringOperation = op.createIntelligenceGatheringOperation(start, end,
+                        cameraType, flightRoute);
+                this.drawerOperations.remove(op);
+                break;
+            }
+        }
+        if (intelligenceGatheringOperation == null) {
+            return false;
+        }
+        return addOperation(intelligenceGatheringOperation);
+    }
+
+    public boolean drawerOperationNameExists(String operationName) {
+        for (DrawerOperation op : this.drawerOperations) {
+            if (op.getTaskInformation().getOperationName().equals(operationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

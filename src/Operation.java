@@ -2,10 +2,10 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 
 public class Operation {
-    private final TaskInformation taskInformation;
-    private HashSet<Integer> assignedAircrafts;
-    private LocalDateTime start;
-    private LocalDateTime end;
+    protected final TaskInformation taskInformation;
+    protected HashSet<Integer> assignedAircrafts;
+    protected LocalDateTime start;
+    protected LocalDateTime end;
 
     public Operation(TaskInformation taskInformation, LocalDateTime start, LocalDateTime end) {
         this.taskInformation = taskInformation;
@@ -68,6 +68,15 @@ public class Operation {
     }
 
     public boolean isOperationReady() {
-        return taskInformation.getNumOfAircrafts() == assignedAircrafts.size();
+        return false;
+    }
+
+    public boolean isOperationInXTime(int x) {
+        return LocalDateTime.now().isAfter(this.start.minusHours(x))
+                && LocalDateTime.now().isBefore(this.start);
+    }
+
+    public boolean reachedCapacity() {
+        return this.getTaskInformation().getNumOfAircrafts() == this.assignedAircrafts.size();
     }
 }

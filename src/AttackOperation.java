@@ -18,4 +18,13 @@ public class AttackOperation extends Operation {
     public Point getAttackLocation() {
         return this.attackLocation;
     }
+
+    public boolean isOperationReady() {
+        if (LocalDateTime.now().isAfter(this.start)) {
+            return false;
+        }
+        boolean hasRequiredAircraftCount = taskInformation.getNumOfAircrafts() == assignedAircrafts.size();
+        boolean isInTime = LocalDateTime.now().isAfter(this.start.minusHours(10));
+        return hasRequiredAircraftCount && isInTime;
+    }
 }

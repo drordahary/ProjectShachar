@@ -18,4 +18,16 @@ public class IntelligenceGatheringOperation extends Operation {
     public String getFlightRoute() {
         return this.flightRoute;
     }
+
+    public boolean isOperationReady() {
+        if (LocalDateTime.now().isAfter(this.start)) {
+            return false;
+        }
+        int requiredAircraftsCount = taskInformation.getNumOfAircrafts();
+        int amountCurrently = assignedAircrafts.size();
+        boolean hasRequiredAircraftCount =
+                (int)Math.ceil((((double)requiredAircraftsCount) / amountCurrently) * 100) >= 80;
+        boolean isInTime = LocalDateTime.now().isAfter(this.start.minusHours(3));
+        return hasRequiredAircraftCount && isInTime;
+    }
 }

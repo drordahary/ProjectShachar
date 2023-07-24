@@ -20,6 +20,15 @@ public class Utils {
         }
     }
 
+    public static JSONObject drawerOperationToJson(DrawerOperation op) {
+        JSONObject jsonObject = new JSONObject();
+        TaskInformation taskInformation = op.getTaskInformation();
+        jsonObject.put("operationName", taskInformation.getOperationName());
+        jsonObject.put("taskDescription", taskInformation.getTaskDescription());
+        jsonObject.put("numOfAircrafts", taskInformation.getNumOfAircrafts());
+        return jsonObject;
+    }
+
     public static JSONObject operationToJson(Operation op) {
         JSONObject jsonObject = new JSONObject();
         TaskInformation taskInformation = op.getTaskInformation();

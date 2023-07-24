@@ -6,6 +6,8 @@ import java.util.Scanner;
 public class Main {
     public static MainSystem mainSystem = new MainSystem();
     public static String DATE_FORMAT = "yyyy-MM-dd HH:mm";
+    public static int INTELLIGENCE_GATHERING = 1;
+    public static int ATTACK_OPERATION = 2;
 
     public static void main(String[] args) {
         showMenu();
@@ -88,13 +90,13 @@ public class Main {
         }
     }
 
-    public static void handleAddOperation() {
+    public static TaskInformation getTaskInformation() {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter operation name: ");
         String operationName = sc.nextLine();
         if (mainSystem.operationNameExists(operationName)) {
             System.out.println("Operation name already exists");
-            return;
+            return null;
         }
 
         System.out.print("Enter task description: ");
@@ -107,108 +109,28 @@ public class Main {
             count = Integer.parseInt(input);
             if (count <= 0) {
                 System.out.println("Invalid number of required aircrafts");
-                return;
+                return null;
             }
         } catch (NumberFormatException e) {
             System.out.println("Not a number");
-            return;
+            return null;
         }
-
-        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
-        String startString = sc.nextLine();
-        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
-            return;
-        }
-        System.out.print("Enter ending date: ");
-        String endString = sc.nextLine();
-        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
-            return;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-        LocalDateTime start = LocalDateTime.parse(startString, formatter);
-        LocalDateTime end = LocalDateTime.parse(endString, formatter);
-
-        if (start.isAfter(end) || start.equals(end)) {
-            System.out.println("Invalid end date - start should be after end");
-            return;
-        }
-
-        System.out.print("Enter operation type (1 - Intelligence gathering, 2 - Attack): ");
-        input = sc.nextLine();
-        int type;
-        try {
-            type = Integer.parseInt(input);
-            if (type != 1 && type != 2) {
-                System.out.println("Invalid input");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input");
-            return;
-        }
-
-        if (type == 1) {
-            System.out.print("Enter camera type: ");
-            String cameraType = sc.nextLine();
-            System.out.print("Enter flight route: ");
-            String flightRoute = sc.nextLine();
-
-            TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
-            Operation op = new IntelligenceGatheringOperation(taskInfo, cameraType, flightRoute,
-                    start, end);
-            if (!mainSystem.addOperation(op)) {
-                System.out.println("Cannot create operation");
-            }
-        } else {
-            System.out.print("Enter armament type: ");
-            String armamentType = sc.nextLine();
-
-            System.out.println("Enter attack location:");
-            System.out.print("Enter x: ");
-            input = sc.nextLine();
-            double x;
-            try {
-                x = Double.parseDouble(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input");
-                return;
-            }
-
-            System.out.print("Enter y: ");
-            input = sc.nextLine();
-            double y;
-            try {
-                y = Double.parseDouble(input);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input");
-                return;
-            }
-
-            Point attackLocation = new Point(x, y);
-            TaskInformation taskInfo = new TaskInformation(operationName, taskDescription, count);
-            Operation op = new AttackOperation(taskInfo, armamentType, attackLocation, start, end);
-            if (!mainSystem.addOperation(op)) {
-                System.out.println("Cannot create operation");
-            }
-        }
+        return new TaskInformation(operationName, taskDescription, count);
     }
 
-    public static void handleGetOperationsTimeSpan() {
+    public static LocalDateTime[] getDates() {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
         String startString = sc.nextLine();
         if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
             System.out.println("Invalid date");
-            return;
+            return null;
         }
         System.out.print("Enter ending date: ");
         String endString = sc.nextLine();
         if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
             System.out.println("Invalid date");
-            return;
+            return null;
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
@@ -217,11 +139,110 @@ public class Main {
 
         if (start.isAfter(end) || start.equals(end)) {
             System.out.println("Invalid end date - start should be after end");
+            return null;
+        }
+
+        return new LocalDateTime[] {start, end};
+    }
+
+    public static void handleAddOperation() {
+        Scanner sc = new Scanner(System.in);
+        TaskInformation TI = getTaskInformation();
+        if (TI == null) {
+            return;
+        }
+
+        LocalDateTime[] dates = getDates();
+        if (dates == null) {
+            return;
+        }
+
+        int type = getOperationType();
+        if (type == Integer.MIN_VALUE) {
+            return;
+        }
+
+        if (type == INTELLIGENCE_GATHERING) {
+            handleIntelligenceGatheringChoice(dates[0], dates[1], TI);
+        } else {
+            handleAttackChoice(dates[0], dates[1], TI);
+        }
+    }
+
+    public static int getOperationType() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter operation type (1 - Intelligence gathering, 2 - Attack): ");
+        String input = sc.nextLine();
+        int type;
+        try {
+            type = Integer.parseInt(input);
+            if (type != INTELLIGENCE_GATHERING && type != ATTACK_OPERATION) {
+                System.out.println("Invalid input");
+                return Integer.MIN_VALUE;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input");
+            return Integer.MIN_VALUE;
+        }
+        return type;
+    }
+
+    public static void handleIntelligenceGatheringChoice(LocalDateTime start, LocalDateTime end,
+                                                         TaskInformation taskInformation) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter camera type: ");
+        String cameraType = sc.nextLine();
+        System.out.print("Enter flight route: ");
+        String flightRoute = sc.nextLine();
+
+        Operation op = new IntelligenceGatheringOperation(taskInformation, cameraType, flightRoute,
+                start, end);
+        if (!mainSystem.addOperation(op)) {
+            System.out.println("Cannot create operation");
+        }
+    }
+
+    public static void handleAttackChoice(LocalDateTime start, LocalDateTime end, TaskInformation TI) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter armament type: ");
+        String armamentType = sc.nextLine();
+
+        System.out.println("Enter attack location:");
+        System.out.print("Enter x: ");
+        String input = sc.nextLine();
+        double x;
+        try {
+            x = Double.parseDouble(input);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input");
+            return;
+        }
+
+        System.out.print("Enter y: ");
+        input = sc.nextLine();
+        double y;
+        try {
+            y = Double.parseDouble(input);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input");
+            return;
+        }
+
+        Point attackLocation = new Point(x, y);
+        Operation op = new AttackOperation(TI, armamentType, attackLocation, start, end);
+        if (!mainSystem.addOperation(op)) {
+            System.out.println("Cannot create operation");
+        }
+    }
+
+    public static void handleGetOperationsTimeSpan() {
+        LocalDateTime[] dates = getDates();
+        if (dates == null) {
             return;
         }
 
         System.out.println("Operations:");
-        List<Operation> operations = mainSystem.getAllOperationsWithinTime(start, end);
+        List<Operation> operations = mainSystem.getAllOperationsWithinTime(dates[0], dates[1]);
         for (Operation op : operations) {
             System.out.println(op.getTaskInformation().getOperationName());
         }
@@ -253,57 +274,20 @@ public class Main {
             return;
         }
 
-        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
-        String startString = sc.nextLine();
-        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
+        LocalDateTime[] dates = getDates();
+        if (dates == null) {
             return;
         }
-        System.out.print("Enter ending date: ");
-        String endString = sc.nextLine();
-        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
-            return;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-        LocalDateTime start = LocalDateTime.parse(startString, formatter);
-        LocalDateTime end = LocalDateTime.parse(endString, formatter);
-
-        if (start.isAfter(end) || start.equals(end)) {
-            System.out.println("Invalid end date - start should be after end");
-            return;
-        }
-
-        mainSystem.changeOperationTime(op, start, end);
+        mainSystem.changeOperationTime(op, dates[0], dates[1]);
     }
 
     public static void handleAddDrawerOperation() {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Enter operation name: ");
-        String operationName = sc.nextLine();
-        if (mainSystem.operationNameExists(operationName)) {
-            System.out.println("Operation name already exists");
+        TaskInformation TI = getTaskInformation();
+        if (TI == null) {
             return;
         }
-        System.out.print("Enter task description: ");
-        String taskDescription = sc.nextLine();
-
-        System.out.print("Enter number of required aircrafts: ");
-        String input = sc.nextLine();
-        int count;
-        try {
-            count = Integer.parseInt(input);
-            if (count <= 0) {
-                System.out.println("Invalid number of required aircrafts");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Not a number");
-            return;
-        }
-
-        mainSystem.addDrawerOperation(operationName, taskDescription, count);
+        mainSystem.addDrawerOperation(TI.getOperationName(), TI.getTaskDescription(),
+                TI.getNumOfAircrafts());
     }
 
     public static void handleCreateFromDrawerOperation() {
@@ -315,49 +299,23 @@ public class Main {
             return;
         }
 
-        System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
-        String startString = sc.nextLine();
-        if (!Utils.isValidDateString(startString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
-            return;
-        }
-        System.out.print("Enter ending date: ");
-        String endString = sc.nextLine();
-        if (!Utils.isValidDateString(endString, DATE_FORMAT)) {
-            System.out.println("Invalid date");
+        LocalDateTime[] dates = getDates();
+        if (dates == null) {
             return;
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-        LocalDateTime start = LocalDateTime.parse(startString, formatter);
-        LocalDateTime end = LocalDateTime.parse(endString, formatter);
-
-        if (start.isAfter(end) || start.equals(end)) {
-            System.out.println("Invalid end date - start should be after end");
+        int type = getOperationType();
+        if (type == Integer.MIN_VALUE) {
             return;
         }
 
-        System.out.print("Enter operation type (1 - Intelligence gathering, 2 - Attack): ");
-        String input = sc.nextLine();
-        int type;
-        try {
-            type = Integer.parseInt(input);
-            if (type != 1 && type != 2) {
-                System.out.println("Invalid input");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input");
-            return;
-        }
-
-        if (type == 1) {
+        if (type == INTELLIGENCE_GATHERING) {
             System.out.print("Enter camera type: ");
             String cameraType = sc.nextLine();
             System.out.print("Enter flight route: ");
             String flightRoute = sc.nextLine();
 
-            if (!mainSystem.createIntelligenceGatheringOperation(operationName, start, end,
+            if (!mainSystem.createIntelligenceGatheringOperation(operationName, dates[0], dates[1],
                     cameraType, flightRoute)) {
                 System.out.println("Cannot create operation");
             }
@@ -367,7 +325,7 @@ public class Main {
 
             System.out.println("Enter attack location:");
             System.out.print("Enter x: ");
-            input = sc.nextLine();
+            String input = sc.nextLine();
             double x;
             try {
                 x = Double.parseDouble(input);
@@ -388,7 +346,7 @@ public class Main {
 
             Point attackLocation = new Point(x, y);
 
-            if (!mainSystem.createAttackOperation(operationName, start, end, armamentType, attackLocation)) {
+            if (!mainSystem.createAttackOperation(operationName, dates[0], dates[1], armamentType, attackLocation)) {
                 System.out.println("Cannot create operation");
             }
         }

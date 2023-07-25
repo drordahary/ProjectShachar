@@ -138,7 +138,7 @@ public class Main {
         LocalDateTime end = LocalDateTime.parse(endString, formatter);
 
         if (start.isAfter(end) || start.equals(end)) {
-            System.out.println("Invalid end date - start should be after end");
+            System.out.println("Invalid end date - start should be before end");
             return null;
         }
 

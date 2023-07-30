@@ -9,6 +9,16 @@ public class Main {
     public static int INTELLIGENCE_GATHERING = 1;
     public static int ATTACK_OPERATION = 2;
 
+    public static String ADD_AIRCRAFT = "1";
+    public static String ADD_OPERATION = "2";
+    public static String GET_OP_TIME_SPAN = "3";
+    public static String CHECK_OP_READY = "4";
+    public static String CHANGE_OP_TIME = "5";
+    public static String ADD_DRAWER_OP = "6";
+    public static String CREATE_FROM_DRAWER = "7";
+    public static String GET_UNPREPARED_OPS = "8";
+    public static String EXIT = "9";
+
     public static void main(String[] args) {
         showMenu();
         while (handleMenuChooser()) {
@@ -33,47 +43,39 @@ public class Main {
     public static boolean handleMenuChooser() {
         Scanner sc = new Scanner(System.in);
         String choice = sc.nextLine();
-        switch (choice) {
-            case "1" -> {
-                handleAddAircraft();
-                return true;
-            }
-            case "2" -> {
-                handleAddOperation();
-                return true;
-            }
-            case "3" -> {
-                handleGetOperationsTimeSpan();
-                return true;
-            }
-            case "4" -> {
-                handleCheckOperationReady();
-                return true;
-            }
-            case "5" -> {
-                handleChangeOperationTime();
-                return true;
-            }
-            case "6" -> {
-                handleAddDrawerOperation();
-                return true;
-            }
-            case "7" -> {
-                handleCreateFromDrawerOperation();
-                return true;
-            }
-            case "8" -> {
-                handleGetUnpreparedOperations();
-                return true;
-            }
-            case "9" -> {
-                return false;
-            }
-            default -> {
-                System.out.println("Invalid input");
-                return true;
-            }
+        if (choice.equals(ADD_AIRCRAFT)) {
+            handleAddAircraft();
+            return true;
         }
+        if (choice.equals(ADD_OPERATION)) {
+            handleAddOperation();
+            return true;
+        }
+        if (choice.equals(GET_OP_TIME_SPAN)) {
+            handleGetOperationsTimeSpan();
+            return true;
+        }
+        if (choice.equals(CHECK_OP_READY)) {
+            handleCheckOperationReady();
+            return true;
+        }
+        if (choice.equals(CHANGE_OP_TIME)) {
+            handleChangeOperationTime();
+            return true;
+        }
+        if (choice.equals(ADD_DRAWER_OP)) {
+            handleAddDrawerOperation();
+            return true;
+        }
+        if (choice.equals(CREATE_FROM_DRAWER)) {
+            handleCreateFromDrawerOperation();
+            return true;
+        }
+        if (choice.equals(GET_UNPREPARED_OPS)) {
+            handleGetUnpreparedOperations();
+            return true;
+        }
+        return !choice.equals(EXIT);
     }
 
     public static void handleAddAircraft() {
@@ -118,7 +120,7 @@ public class Main {
         return new TaskInformation(operationName, taskDescription, count);
     }
 
-    public static LocalDateTime[] getDates() {
+    public static LocalDateTime[] getDates(boolean isForOperation) {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter starting date (yyyy-MM-dd HH:mm format): ");
         String startString = sc.nextLine();
@@ -142,6 +144,10 @@ public class Main {
             return null;
         }
 
+        if (isForOperation && start.isBefore(LocalDateTime.now())) {
+            System.out.println("Invalid date - can only be in future");
+        }
+
         return new LocalDateTime[] {start, end};
     }
 
@@ -151,7 +157,7 @@ public class Main {
             return;
         }
 
-        LocalDateTime[] dates = getDates();
+        LocalDateTime[] dates = getDates(true);
         if (dates == null) {
             return;
         }
@@ -235,7 +241,7 @@ public class Main {
     }
 
     public static void handleGetOperationsTimeSpan() {
-        LocalDateTime[] dates = getDates();
+        LocalDateTime[] dates = getDates(false);
         if (dates == null) {
             return;
         }
@@ -273,7 +279,7 @@ public class Main {
             return;
         }
 
-        LocalDateTime[] dates = getDates();
+        LocalDateTime[] dates = getDates(true);
         if (dates == null) {
             return;
         }
@@ -298,7 +304,7 @@ public class Main {
             return;
         }
 
-        LocalDateTime[] dates = getDates();
+        LocalDateTime[] dates = getDates(true);
         if (dates == null) {
             return;
         }

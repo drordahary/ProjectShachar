@@ -102,10 +102,16 @@ public class MainSystem {
     public List<Operation> getAllOperationsWithinTime(LocalDateTime start, LocalDateTime end) {
         List<Operation> allOperations = new ArrayList<>();
         for (Operation op : this.operations) {
-            if (((op.getStart().isAfter(start) || op.getStart().equals(start))
-                    && (op.getEnd().isBefore(end) || op.getEnd().equals(end)))
-            || ((op.getStart().isBefore(start) || op.getStart().equals(start))
-                    && (op.getEnd().isAfter(end) || op.getEnd().equals(end)))) {
+            if (start.isBefore(op.getStart()) && end.isAfter(op.getEnd())) {
+                allOperations.add(op);
+
+            } else if (start.isAfter(op.getStart()) && start.isBefore(op.getEnd())) {
+                allOperations.add(op);
+
+            } else if (end.isBefore(op.getEnd()) && end.isAfter(op.getStart())) {
+                allOperations.add(op);
+
+            } else if (start.isAfter(op.getStart()) && end.isBefore(op.getEnd())) {
                 allOperations.add(op);
             }
         }
@@ -149,7 +155,7 @@ public class MainSystem {
                     break;
                 }
             }
-            if (assign == 1) {
+            if (assign == 1 && !operation.reachedCapacity() && !aircraft.operationAssignmentOverlaps(operation)) {
                 operation.assignAircraft(aircraft.getId());
             }
             assign = 1;

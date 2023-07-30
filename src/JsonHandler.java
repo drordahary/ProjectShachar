@@ -18,7 +18,7 @@ public class JsonHandler {
     private final String JSON_OPERATION_PATH = "data\\operation.json";
     private final String SRC_DIRECTORY = "src\\";
 
-    public void setDataFromAircraftJson(HashSet<Integer> aircrafts) {
+    public void setDataFromAircraftJson(HashSet<Aircraft> aircrafts) {
         String resourceName = JSON_AIRCRAFT_PATH;
         InputStream is = MainSystem.class.getResourceAsStream(resourceName);
         if (is == null) {
@@ -28,7 +28,7 @@ public class JsonHandler {
         JSONTokener tokener = new JSONTokener(is);
         this.jsonAircraft = new JSONArray(tokener);
         for (int i = 0; i < this.jsonAircraft.length(); i++) {
-            aircrafts.add(this.jsonAircraft.getInt(i));
+            aircrafts.add(new Aircraft(this.jsonAircraft.getInt(i)));
         }
     }
 
@@ -50,7 +50,13 @@ public class JsonHandler {
 
             TaskInformation taskInformation = new TaskInformation(operationName,
                     taskDescription, numOfAircrafts);
-            drawerOperations.add(new DrawerOperation(taskInformation));
+            if (currentObject.has("cameraType")) {
+                String cameraType = currentObject.getString("cameraType");
+                String flightRoute = currentObject.getString("flightRoute");
+                drawerOperations.add(new IntelligenceDrawerOperation(taskInformation, cameraType, flightRoute));
+            } else {
+                drawerOperations.add(new DrawerOperation(taskInformation));
+            }
         }
     }
 
@@ -102,9 +108,13 @@ public class JsonHandler {
         }
     }
 
-    public void addAircraftToJson(int id, HashSet<Integer> aircrafts) {
+    public void addAircraftToJson(int id, HashSet<Aircraft> aircrafts) {
         this.jsonAircraft.put(id);
-        Utils.writeJsonToFile(SRC_DIRECTORY + JSON_AIRCRAFT_PATH, aircrafts.toString());
+        HashSet<Integer> ids = new HashSet<>();
+        for (Aircraft aircraft : aircrafts) {
+            ids.add(aircraft.getId());
+        }
+        Utils.writeJsonToFile(SRC_DIRECTORY + JSON_AIRCRAFT_PATH, ids.toString());
     }
 
     public void addOperationToJson(Operation operation) {
@@ -123,7 +133,11 @@ public class JsonHandler {
     }
 
     public void addDrawerOperationToJson(DrawerOperation drawerOperation) {
-        this.jsonDrawerOperations.put(Utils.drawerOperationToJson(drawerOperation));
+        if (drawerOperation instanceof IntelligenceDrawerOperation) {
+            this.jsonDrawerOperations.put(Utils.intelligenceDrawerToJson((IntelligenceDrawerOperation) drawerOperation));
+        } else {
+            this.jsonDrawerOperations.put(Utils.drawerOperationToJson(drawerOperation));
+        }
         Utils.writeJsonToFile(SRC_DIRECTORY + JSON_DRAWER_OPERATION_PATH,
                 this.jsonDrawerOperations.toString());
     }
@@ -132,7 +146,7 @@ public class JsonHandler {
         String opName = drawerOperation.getTaskInformation().getOperationName();
         this.jsonDrawerOperations
                 .remove(Utils.getIndexByOperationName(this.jsonDrawerOperations, opName));
-        Utils.writeJsonToFile("src\\data\\drawerOperation.json",
+        Utils.writeJsonToFile(SRC_DIRECTORY + JSON_DRAWER_OPERATION_PATH,
                 this.jsonDrawerOperations.toString());
     }
 }

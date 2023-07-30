@@ -15,9 +15,10 @@ public class Main {
     public static String CHECK_OP_READY = "4";
     public static String CHANGE_OP_TIME = "5";
     public static String ADD_DRAWER_OP = "6";
-    public static String CREATE_FROM_DRAWER = "7";
-    public static String GET_UNPREPARED_OPS = "8";
-    public static String EXIT = "9";
+    public static String ADD_INTEL_DRAWER_OP = "7";
+    public static String CREATE_FROM_DRAWER = "8";
+    public static String GET_UNPREPARED_OPS = "9";
+    public static String EXIT = "10";
 
     public static void main(String[] args) {
         showMenu();
@@ -35,9 +36,10 @@ public class Main {
         System.out.println("4. Check if an operation is ready");
         System.out.println("5. Change operation time");
         System.out.println("6. Add drawer operation");
-        System.out.println("7. Create Intelligence gathering/Attack operation from drawer operation");
-        System.out.println("8. Get all unprepared operations in X hours in advance");
-        System.out.println("9. Exit");
+        System.out.println("7. Add intelligence drawer operation");
+        System.out.println("8. Create Intelligence gathering/Attack operation from drawer operation");
+        System.out.println("9. Get all unprepared operations in X hours in advance");
+        System.out.println("10. Exit");
     }
 
     public static boolean handleMenuChooser() {
@@ -65,6 +67,10 @@ public class Main {
         }
         if (choice.equals(ADD_DRAWER_OP)) {
             handleAddDrawerOperation();
+            return true;
+        }
+        if (choice.equals(ADD_INTEL_DRAWER_OP)) {
+            handleAddIntelligenceDrawerOperation();
             return true;
         }
         if (choice.equals(CREATE_FROM_DRAWER)) {
@@ -286,6 +292,20 @@ public class Main {
         mainSystem.changeOperationTime(op, dates[0], dates[1]);
     }
 
+    public static void handleAddIntelligenceDrawerOperation() {
+        Scanner sc = new Scanner(System.in);
+        TaskInformation TI = getTaskInformation();
+        if (TI == null) {
+            return;
+        }
+        System.out.print("Enter camera type: ");
+        String cameraType = sc.nextLine();
+        System.out.print("Enter flight route: ");
+        String flightRoute = sc.nextLine();
+
+        mainSystem.addIntelligenceDrawerOperation(TI, cameraType, flightRoute);
+    }
+
     public static void handleAddDrawerOperation() {
         TaskInformation TI = getTaskInformation();
         if (TI == null) {
@@ -306,6 +326,17 @@ public class Main {
 
         LocalDateTime[] dates = getDates(true);
         if (dates == null) {
+            return;
+        }
+
+        if (mainSystem.isIntelligenceDrawerOperation(operationName)) {
+            DrawerOperation intelligenceDrawerOperation = mainSystem.getDrawerOperationByName(operationName);
+
+            if (!mainSystem.createIntelligenceGatheringOperation(operationName, dates[0], dates[1],
+                    ((IntelligenceDrawerOperation)intelligenceDrawerOperation).getCameraType(),
+                    ((IntelligenceDrawerOperation)intelligenceDrawerOperation).getFlightRoute())) {
+                System.out.println("Cannot create operation");
+            }
             return;
         }
 

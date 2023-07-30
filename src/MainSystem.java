@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class MainSystem {
-    private final HashSet<Integer> aircrafts;
+    private final HashSet<Aircraft> aircrafts;
     private final List<DrawerOperation> drawerOperations;
     private final List<Operation> operations;
     private final JsonHandler jsonHandler;
@@ -15,6 +15,10 @@ public class MainSystem {
         this.drawerOperations = new ArrayList<>();
         this.jsonHandler = new JsonHandler();
         setDataFromJson();
+
+        for (Aircraft aircraft : this.aircrafts) {
+            tryAddAircraftToOperations(aircraft);
+        }
     }
 
     public void setDataFromJson() {
@@ -23,14 +27,24 @@ public class MainSystem {
         this.jsonHandler.setDataFromOperationJson(this.operations);
     }
 
+    public boolean hasAircraftId(int id) {
+        for (Aircraft aircraft : this.aircrafts) {
+            if (aircraft.getId() == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean addAircraft(int id) {
-        if (this.aircrafts.contains(id)) {
+        if (hasAircraftId(id)) {
             return false;
         }
 
-        this.aircrafts.add(id);
+        Aircraft aircraft = new Aircraft(id);
+        this.aircrafts.add(aircraft);
         this.jsonHandler.addAircraftToJson(id, this.aircrafts);
-        tryAddAircraftToOperations(id);
+        tryAddAircraftToOperations(aircraft);
         return true;
     }
 
@@ -45,26 +59,18 @@ public class MainSystem {
         return true;
     }
 
-    public boolean cannotAssignAircraftToOperation(int id, Operation operation) {
-        return !this.operations.contains(operation) || operation.isAircraftAssigned(id)
+    public boolean cannotAssignAircraftToOperation(Aircraft aircraft, Operation operation) {
+        return !this.operations.contains(operation) || operation.isAircraftAssigned(aircraft.getId())
                 || operation.isOperationReady() || operation.reachedCapacity();
     }
 
-    public boolean operationAssignmentOverlaps(int id, Operation operation) {
-        for (Operation op : this.operations) {
-            if (op.isAircraftAssigned(id) && !operation.canAssignWithTime(op)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void assignAircraftToOperation(int id, Operation operation) {
-        if (cannotAssignAircraftToOperation(id, operation) || operationAssignmentOverlaps(id, operation)) {
+    public void assignAircraftToOperation(Aircraft aircraft, Operation operation) {
+        if (cannotAssignAircraftToOperation(aircraft, operation) || aircraft.operationAssignmentOverlaps(operation)) {
             return;
         }
 
-        operation.assignAircraft(id);
+        operation.assignAircraft(aircraft.getId());
+        aircraft.addOperationToList(operation);
         this.jsonHandler.addOperationToJson(operation);
     }
 
@@ -117,33 +123,34 @@ public class MainSystem {
 
         // It's possible that because the time changes, it will open up
         // other operations for all aircraft
-        for (Integer aircraftId : this.aircrafts) {
-            tryAddAircraftToOperations(aircraftId);
+        for (Aircraft aircraft : this.aircrafts) {
+            aircraft.clearOperations();
+            tryAddAircraftToOperations(aircraft);
         }
     }
 
-    public void tryAddAircraftToOperations(int id) {
+    public void tryAddAircraftToOperations(Aircraft aircraft) {
         for (Operation operation : this.operations) {
-            assignAircraftToOperation(id, operation);
+            assignAircraftToOperation(aircraft, operation);
         }
     }
 
     public void assignAllPossibleAircrafts(Operation operation) {
         int assign = 1;
-        for (Integer aircraftId : this.aircrafts) {
+        for (Aircraft aircraft : this.aircrafts) {
             for (Operation op : this.operations) {
                 if (operation.getTaskInformation().getOperationName()
                         .equals(op.getTaskInformation().getOperationName())) {
                     continue;
                 }
 
-                if (op.isAircraftAssigned(aircraftId) && !operation.canAssignWithTime(op)) {
+                if (op.isAircraftAssigned(aircraft.getId()) && !operation.canAssignWithTime(op)) {
                     assign = 0;
                     break;
                 }
             }
             if (assign == 1) {
-                operation.assignAircraft(aircraftId);
+                operation.assignAircraft(aircraft.getId());
             }
             assign = 1;
         }
@@ -156,6 +163,32 @@ public class MainSystem {
                 System.out.println(op.getTaskInformation().getOperationName());
             }
         }
+    }
+
+    public DrawerOperation getDrawerOperationByName(String opName) {
+        for (DrawerOperation op : this.drawerOperations) {
+            if (op.getTaskInformation().getOperationName().equals(opName)) {
+                return op;
+            }
+        }
+        return null;
+    }
+
+    public boolean isIntelligenceDrawerOperation(String opName) {
+        DrawerOperation op = getDrawerOperationByName(opName);
+        if (op == null) {
+            return false;
+        }
+        return op instanceof IntelligenceDrawerOperation;
+    }
+
+    public void addIntelligenceDrawerOperation(TaskInformation TI, String cameraType, String flightRoute) {
+        if (operationNameExists(TI.getOperationName())) {
+            return;
+        }
+        DrawerOperation drawerOperation = new IntelligenceDrawerOperation(TI, cameraType, flightRoute);
+        this.drawerOperations.add(drawerOperation);
+        this.jsonHandler.addDrawerOperationToJson(drawerOperation);
     }
 
     public void addDrawerOperation(String operationName, String taskDescription, int numOfAircrafts) {

@@ -29,6 +29,17 @@ public class Utils {
         return jsonObject;
     }
 
+    public static JSONObject intelligenceDrawerToJson(IntelligenceDrawerOperation op) {
+        JSONObject jsonObject = new JSONObject();
+        TaskInformation taskInformation = op.getTaskInformation();
+        jsonObject.put("operationName", taskInformation.getOperationName());
+        jsonObject.put("taskDescription", taskInformation.getTaskDescription());
+        jsonObject.put("numOfAircrafts", taskInformation.getNumOfAircrafts());
+        jsonObject.put("cameraType", op.getCameraType());
+        jsonObject.put("flightRoute", op.getFlightRoute());
+        return jsonObject;
+    }
+
     public static JSONObject operationToJson(Operation op) {
         JSONObject jsonObject = new JSONObject();
         TaskInformation taskInformation = op.getTaskInformation();

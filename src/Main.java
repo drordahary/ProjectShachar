@@ -152,6 +152,7 @@ public class Main {
 
         if (isForOperation && start.isBefore(LocalDateTime.now())) {
             System.out.println("Invalid date - can only be in future");
+            return null;
         }
 
         return new LocalDateTime[] {start, end};

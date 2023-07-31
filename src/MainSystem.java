@@ -59,13 +59,9 @@ public class MainSystem {
         return true;
     }
 
-    public boolean cannotAssignAircraftToOperation(Aircraft aircraft, Operation operation) {
-        return !this.operations.contains(operation) || operation.isAircraftAssigned(aircraft.getId())
-                || operation.isOperationReady() || operation.reachedCapacity();
-    }
-
     public void assignAircraftToOperation(Aircraft aircraft, Operation operation) {
-        if (cannotAssignAircraftToOperation(aircraft, operation) || aircraft.operationAssignmentOverlaps(operation)) {
+        if (operation.cannotAssignAircraftToOperation(aircraft)
+                || aircraft.operationAssignmentOverlaps(operation)) {
             return;
         }
 
@@ -112,6 +108,9 @@ public class MainSystem {
                 allOperations.add(op);
 
             } else if (start.isAfter(op.getStart()) && end.isBefore(op.getEnd())) {
+                allOperations.add(op);
+
+            } else if (start.equals(op.getStart()) || end.equals(op.getEnd())) {
                 allOperations.add(op);
             }
         }

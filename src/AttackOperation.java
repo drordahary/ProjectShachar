@@ -27,4 +27,9 @@ public class AttackOperation extends Operation {
         boolean isInTime = LocalDateTime.now().isAfter(this.start.minusHours(10));
         return hasRequiredAircraftCount && isInTime;
     }
+
+    public boolean cannotAssignAircraftToOperation(Aircraft aircraft) {
+        return isAircraftAssigned(aircraft.getId())
+                || isOperationReady() || reachedCapacity();
+    }
 }

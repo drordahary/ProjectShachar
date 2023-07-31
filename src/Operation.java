@@ -79,4 +79,8 @@ public class Operation {
     public boolean reachedCapacity() {
         return this.getTaskInformation().getNumOfAircrafts() == this.assignedAircrafts.size();
     }
+
+    public boolean cannotAssignAircraftToOperation(Aircraft aircraft) {
+        return false;
+    }
 }

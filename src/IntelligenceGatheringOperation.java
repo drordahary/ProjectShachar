@@ -30,4 +30,9 @@ public class IntelligenceGatheringOperation extends Operation {
         boolean isInTime = LocalDateTime.now().isAfter(this.start.minusHours(3));
         return hasRequiredAircraftCount && isInTime;
     }
+
+    public boolean cannotAssignAircraftToOperation(Aircraft aircraft) {
+        return isAircraftAssigned(aircraft.getId())
+                || isOperationReady() || reachedCapacity();
+    }
 }
